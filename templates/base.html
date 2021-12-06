@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- This block is for page title. -->
+  <title>{% block title %}{% endblock %}</title>
+
+  <!-- React could go here. -->
+
+  <link href="/static/css/site.css" rel="stylesheet">
+
+</head>
+<body>
+  <!-- This block is for page specific body. -->
+  {% block body %}
+  {% endblock %}
+
+  <!-- This block allows page specific JS. -->
+  {% block js %}
+  {% endblock %}
+</body>
+</html>
