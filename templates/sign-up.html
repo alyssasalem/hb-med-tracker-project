@@ -1,24 +1,18 @@
 {% extends 'base.html' %}
 
+<!-- 
+  ids:
+-->
+
 {% block title %} Sign Up {% endblock %}
 
 {% block body %}
-   <!--  
-  <div>
-      <form id='sign-up'>
-      
-        
-        Ask user for their email, if email in database, ask user if they want to recover their password.
-        Ask user for their user_id, show error message if in use.
-        Ask user for a password, over 8 chars with at least one number and one special character.
-        <submit> Sign Up </submit>
-      </form>
-  </div>-->
 
-  Sign Up
+  <div id='sign-up-react'></div>
+  <!-- <div id='sign-up-message'></div> -->
 {% endblock %}
 
 {% block js %}
-	<!-- will eventually store jsx react link for sign up page here:
-    <script src="/static/js/sign-up.jsx" type="text/jsx"></script> -->
+	<!-- will eventually store jsx react link for sign up page here:-->
+  <script src="/static/js/sign-up.jsx" type="text/jsx"></script> 
 {% endblock %}
