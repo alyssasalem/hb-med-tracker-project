@@ -95,7 +95,7 @@ def change_acct():
     phone = request.get_json().get("phone")
     preferred_reminder_type = request.get_json().get("preferred_reminder_type")
     current_pass = request.get_json().get("currentPass")
-    
+    print(f"{current_pass}< this is pass")
     if crud.correct_pass(current_pass, user_id):
         crud.change_acct_info(user_id, email, password, name, phone, preferred_reminder_type)
         return jsonify({"success": True})

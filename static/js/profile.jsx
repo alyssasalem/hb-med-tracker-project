@@ -46,7 +46,7 @@ function ChangeInfo (props) {
     headers: {
         'Content-Type': 'application/json',
     },
-    body: JSON.stringify({email, password, name, phone, preferred_reminder_type}),
+    body: JSON.stringify({email, password, name, phone, preferred_reminder_type, currentPass}),
     })
     .then(response => response.json()
     .then(jsonResponse => {
