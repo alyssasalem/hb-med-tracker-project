@@ -20,7 +20,8 @@
 //   })
 //   ;
 
-
+// SignUpMessage activates when a user has attempted to sign up
+// informs user whether the sign up worked or not.
 function SignUpMessage(props) {
   console.log(props.success)
   if (props.success === true) {
@@ -31,7 +32,8 @@ function SignUpMessage(props) {
   }
 }
 
-
+//AddNewAccount is a container function that allows 
+// users to input info and sign up
 function AddNewAccount() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -52,7 +54,7 @@ function AddNewAccount() {
 return (
   <React.Fragment>
   <h2>Sign Up</h2>
-  <p>
+  <p></p>
     <label htmlFor="emailInput">
         <p>Email:</p>
         <input
@@ -60,16 +62,16 @@ return (
         onChange={event => setEmail(event.target.value)}
         id="emailInput"/>
     </label>
-  </p>
-  <p>
+  
+  <p> </p>
     <label htmlFor="passwordInput">
         <p>Password:</p>
-        <p>Make sure your password is atleast 8 characters long and has at least one of each of the following: lowercase character, uppercase character, number, special symbol. </p>
+        <p>Make sure your password is atleast 8 characters long and has at least one of each of the following: lowercase character, uppercase character, number, special symbol($, @, #, %, !). </p>
         <input value={password} 
         onChange={event => setPassword(event.target.value)} 
         id="passwordInput" />
     </label>
-  </p>
+ 
   <button type="button" onClick={addNewUser}>
       Add
   </button>
@@ -78,4 +80,5 @@ return (
 );
 }
 
+//Calls the sign up form
 ReactDOM.render(<AddNewAccount />, document.querySelector('#sign-up-react'));

@@ -1,5 +1,8 @@
 'use strict';
 
+// Use state changes true/false to render the buttons properly.
+// 
+
 function LoginMessage(props) {
     console.log(props.success)
     if (props.success === true) {
@@ -54,6 +57,75 @@ function LogUserIn() {
   );
   }
   
-  ReactDOM.render(<LogUserIn />, document.querySelector('#login'));
+
+function LogOutMessage(props) {
+  console.log(props.success)
+  if (props.success === true) {
+    
+    let byebye = "";
+    if (props.user !== null){
+      byebye = ` ${props.user}`;
+    }
+
+    return (<React.Fragment>You've logged out! Bye{byebye}!</React.Fragment>);
+  }
+  
+}
+
+function Logout() {
+
+  function logUserOut() {
+    fetch('/log-out')
+    .then(response => response.json()
+    .then(jsonResponse => {
+      console.log(jsonResponse)
+      ReactDOM.render(< LogOutMessage success={jsonResponse.success} user={jsonResponse.name} />, document.querySelector('#logout-message'))
+      })
+    ); 
+
+  }
+  return (
+      <div>
+        <button type="button" onClick={logUserOut}>
+          Logout
+        </button>
+        <section id="logout-message"></section>
+      </div>
+      );}
+
+
+function CheckUser(){
+  const [user, setUser] = React.useState([]);
+
+  function userLogged(){
+    React.useEffect(() => {
+      fetch('/user-logged')
+        .then(response => response.json())
+        .then(result => {
+          setUser(result.user);
+          console.log(user)
+        });
+    }, []);
+    return user
+  }
+
+  userLogged()
+  let userInSession = (user !== null);
+  return (
+    <React.Fragment>
+      {userInSession ? (<Logout />) : ( <LogUserIn />) }
+    </React.Fragment>
+
+  );
+}
+
+ReactDOM.render(<CheckUser />, document.querySelector('#login'));
+
+
+
+//need to set effect so that logout only appears when logged in, 
+//and login and signout only appears when logged out
+//
+
   
 
