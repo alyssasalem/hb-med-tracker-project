@@ -95,6 +95,8 @@ function ChangeInfo (props) {
     <button type="button" onClick={sendInfo}>
       Change Info
     </button>
+
+    <p><a href="/medications"> User's Medications </a></p>
    </React.Fragment>
   )
 }
