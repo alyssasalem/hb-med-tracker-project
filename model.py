@@ -114,7 +114,7 @@ class Dose(db.Model):
             'dose_id'       : self.dose_id,
             'user_id'       : self.user_id,
             'med_id'        : self.med_id,
-            'dosage_amt'    : self.dosage.amt,
+            'dosage_amt'    : self.dosage_amt,
             'dosage_type'   : self.dosage_type,
             'time'          : self.time,
             'notes'         : self.notes,

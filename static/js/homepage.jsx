@@ -1,7 +1,7 @@
 'use strict';
 
 // Use state changes true/false to render the buttons properly.
-// 
+// rework so it only has one render, see notes for pseudocode
 
 function LoginMessage(props) {
     console.log(props.success)

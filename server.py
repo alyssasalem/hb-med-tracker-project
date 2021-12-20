@@ -51,10 +51,95 @@ def profile():
 
 
 @app.route("/medications")
-def users_meds():
-    """Show user's medications currently on file."""
+def med_page():
+    """Show page with user's medications currently on file."""
     return render_template("medications.html")
 
+
+@app.route("/med-history")
+def med_history():
+    """Show page with user's tracked medication history currently on file."""
+    return render_template("med-history.html")
+
+
+#
+#
+#
+"""Helper functions section.
+
+General helper functions.
+Homepage helper functions. """
+#
+#
+#
+
+@app.route("/get-user")
+def get_user():
+    """ Return user. """
+    # for testing, update with working id passing
+    user_id = 1
+    
+    user_object = crud.get_user_by_id(user_id)
+    user = User.dictify(user_object)
+
+    return user
+
+
+#
+#
+#
+"""Helper functions for homepage."""
+#
+#
+#
+@app.route("/login", methods=["POST"])
+def user_login():
+    """ Logs user in."""
+    email = request.get_json().get("email")
+    password = request.get_json().get("password")
+
+    email = email.lower()
+
+    if User.query.filter(User.email == email).first() and (db.session.query(User.password).filter(User.email == email).first()[0]) == password:
+        user = User.query.filter(User.email == email).first()
+        session['user'] = user.user_id
+        return jsonify({"success": True, "userLogged": session['user']})
+    else:
+        return jsonify({"success": False, "userLogged": None})
+
+
+@app.route("/log-out")
+def logout():
+    """ Logs user out. """
+    user_name = None
+    user = crud.get_user_by_id(session['user'])
+
+    if user.name is not None:
+        user_name = str(user.name)
+
+    del session['user']
+
+    return jsonify({"success": True, "name": user_name})
+
+
+@app.route("/user-logged")
+def user_logged():
+    """ Checks the user stored in session."""
+    if ('user' in session and (User.query.get(session['user']))):
+        user = crud.get_user_by_id(session['user'])
+        user_dict = User.dictify(user)
+        return jsonify({"user": user_dict})
+    else:
+        return jsonify({"user": None})
+
+
+#
+#
+#
+"""Helper functions for sign up page."""
+#
+#
+#
 
 @app.route("/add-user", methods=["POST"])
 def add_user():
@@ -73,23 +158,14 @@ def add_user():
 
     return jsonify({"success": True, "userAdded": new_user})
 
+#
+#
+#
+"""Helper functions for profile, account info."""
+#
+#
+#
 
-@app.route("/login", methods=["POST"])
-def user_login():
-    """ Logs user in."""
-    email = request.get_json().get("email")
-    password = request.get_json().get("password")
-
-    email = email.lower()
-
-    if User.query.filter(User.email == email).first() and (db.session.query(User.password).filter(User.email == email).first()[0]) == password:
-        user = User.query.filter(User.email == email).first()
-        session['user'] = user.user_id
-        return jsonify({"success": True, "userLogged": session['user']})
-    else:
-        return jsonify({"success": False, "userLogged": None})
-
-   
 @app.route("/change-acct-info", methods=["POST"])
 def change_acct():
     """Allows a user to change their account info."""
@@ -108,41 +184,75 @@ def change_acct():
     # Add why it didn't pass into the string, maybe. or add on other side.
     return jsonify({"success": False})
 
-@app.route("/get-user")
-def get_user():
-    """ Return user. """
-    # for testing, update with working id passing
-    user_id = 1
-    
-    user_object = crud.get_user_by_id(user_id)
-    user = User.dictify(user_object)
+#
+#
+#
+"""Helper functions for medication page."""
+#
+#
+#
 
-    return user
+@app.route("/med-look-up")
+def user_meds():
+    """Grab user's medications from db, return as list of dictionaries."""
+    meds = crud.get_user_meds(session['user'])
+    meds_dict = crud.dictify_list(meds)
+    return jsonify({"meds": meds_dict})
+
+@app.route("/new-med", methods=["POST"])
+def create_med():
+    """Create new med associated with user."""
+    name = request.form['name']
+    dosage_amt = int(request.form['dosage-amt'])
+    dosage_type = request.form['dosage-type']
+    frequency =  int(request.form['frequency'])
+    per_time = request.form['per-time']
+    notes = request.form['notes']
+    med = crud.create_med(name, session['user'], dosage_amt, dosage_type, frequency, per_time, notes)
+    med_dict = Medication.dictify(med)
 
 
-@app.route("/user-logged")
-def user_logged():
-    """ Checks the user stored in session."""
-    if ('user' in session):
-        user = crud.get_user_by_id(session['user'])
-        user_dict = User.dictify(user)
-        return jsonify({"user": user_dict})
-    else:
-        return jsonify({"user": None})
+    return render_template("medications.html")
 
 
-@app.route("/log-out")
-def logout():
-    """ Logs user out. """
-    user_name = None
-    user = crud.get_user_by_id(session['user'])
+#
+#
+#
+"""Helper functions for medication history page."""
+#
+#
+#
+@app.route("/get-med-history")
+def get_med_history():
+    """Get medication history. Doses are returned as a dictionary of lists of dictionaries. 
+    Each key in the list associates with a med_id, and contains a list of every dose tracked, 
+    stored as a dictionary."""
+    user = User.query.get(session['user'])
+    meds = user.medications
+    doses = {}
+    for med in meds:
+        doses[med.med_id] = crud.dictify_list(med.doses)
+        print(f"AHHHHHHHHHHHHHHHHHHHHHHHHHHHH{doses[med.med_id]}")
+    dict_meds = crud.dictify_list(meds)
 
-    if user.name is not None:
-        user_name = str(user.name)
+    print(dict_meds)
+    print(doses)
+    return jsonify({"success": True, "meds": dict_meds, "doses": doses})
 
-    del session['user']
 
-    return jsonify({"success": True, "name": user_name})
+@app.route("/new-dose", methods=["POST"])
+def create_dose():
+    """Create new med associated with user."""
+    user_id = session['user']
+    med_id = request.form['med-id']
+    doseage_amt = dosage_amt = int(request.form['dosage-amt'])
+    dosage_type = request.form['dosage-type']
+    time = request.form['time']
+    notes = request.form['notes']
+    dose = crud.create_dose(user_id, med_id, dosage_amt, dosage_type, time, notes)
+    dose_dict = Dose.dictify(dose)
+
+    return render_template("med-history.html")
 
 
 if __name__ == "__main__":
