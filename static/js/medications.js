@@ -32,7 +32,8 @@ const createDivsForMeds = (medArray) => {
         ${med['notes']} 
       </section>
       <br>
-    </div>`);
+    </div>
+    <a href='/delete-med/${med['med_id']}'> Delete Medication from User's Account (Will delete all dose history associated with this medication)</a><p>-----</p>`);
   }
   };
 

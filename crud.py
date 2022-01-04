@@ -2,11 +2,11 @@
 
 from model import db, User, Medication, Dose, connect_to_db
 
-def create_user(email, password):
+def create_user(email, password, name = None, phone = None, preferred_reminder_type = None):
     """Create and return a new user."""
 
     email = email.lower()
-    user = User(email=email, password=password)
+    user = User(email=email, password=password, name=name, phone=phone, preferred_reminder_type = preferred_reminder_type)
 
     db.session.add(user)
     db.session.commit()

@@ -12,17 +12,7 @@ function getUserMedHist() {
     });
   }
 
-
-
-
-
-// const createMedNameSections = (meds) => {
-//     const medElement = document.querySelector('#users-meds');
-
-//     for (const med of meds){
-//         medElement.insertAdjacentHTML('beforeend', `<br><section class="med-name">${med['name']} </section>`);
-//     }
-// };  
+// deleteMed = `<a href='/delete-dose/${dose[dose_id]}'> Delete from History</a>`
 
 const createDoseHistoryDivs = (meds, doses) => {
   
@@ -35,7 +25,11 @@ const createDoseHistoryDivs = (meds, doses) => {
     if (doses[med['med_id']].length !== 0){
       medDoses = doses[med['med_id']];
       for (const dose of medDoses) {
-        doseHTML += `<br>${dose['time']}: Took ${dose['dosage_amt']+dose['dosage_type']}. Notes: ${dose['notes']} `;
+        // Takes last four chars off string to eliminate timezone shenanigans. 
+        // Make a point to point this out within demo, suggest other options.
+        console.log(dose['time'].slice(0, dose['time'].length - 4));
+        doseHTML += `<br>${dose['time'].slice(0, dose['time'].length - 4)}: Took ${dose['dosage_amt']+dose['dosage_type']}. Notes: ${dose['notes']} 
+                    <a href='/delete-dose/${dose['dose_id']}'> Delete from History</a>`;
       }
       console.log(doseHTML);
     } else {

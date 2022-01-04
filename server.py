@@ -6,11 +6,27 @@ from flask_sqlalchemy import SQLAlchemy
 from model import db, User, Medication, Dose, connect_to_db
 import crud
 import json
+import os
 from jinja2 import StrictUndefined
+from twilio.rest import Client 
 
 app = Flask(__name__)
 app.secret_key = "dev"
 app.jinja_env.undefined = StrictUndefined
+
+
+
+ 
+account_sid = os.environ['ACCOUNT_SID']
+auth_token = os.environ['AUTH_TOKEN']
+client = Client(account_sid, auth_token)
+ 
+
+
+
+
+
+
 
 
 """General helper functions defined below."""
@@ -29,6 +45,19 @@ def password_check(word):
 
     return True
 
+@app.route("/message")
+def send_reminder():
+    """Currently a test function for Twilio"""
+    session_user = crud.get_user_by_id(session['user'])
+    phone = session_user.phone
+    message = client.messages.create(
+                              messaging_service_sid='MGd0ec2824f97ffc53c6aa437bf9e16f0c',
+                              body='Function test.',
+                              to= phone
+                          )
+    print(message.sid)
+    return jsonify({"success": True})
+
 
 """ App routes defined below. """
 ##
@@ -43,6 +72,7 @@ def homepage():
 def sign_up():
     """ Show sign-up form."""
     return render_template("sign-up.html")
+
 
 @app.route("/profile")
 def profile():
@@ -214,6 +244,18 @@ def create_med():
 
     return render_template("medications.html")
 
+@app.route("/delete-med/<med_id>")
+def delete_medication(med_id):
+    """Deletes a medication from the user's medication list."""
+    med = Medication.query.get(med_id)
+
+    for dose in med.doses:
+        delete_dose_history(dose.dose_id)
+    db.session.delete(med)
+    db.session.commit()
+
+    return render_template("medications.html")
+
 
 #
 #
@@ -225,19 +267,28 @@ def create_med():
 @app.route("/get-med-history")
 def get_med_history():
     """Get medication history. Doses are returned as a dictionary of lists of dictionaries. 
-    Each key in the list associates with a med_id, and contains a list of every dose tracked, 
+    Each key in the list associates with a medication med_id, and contains a list of every dose tracked, 
     stored as a dictionary."""
     user = User.query.get(session['user'])
     meds = user.medications
     doses = {}
     for med in meds:
-        doses[med.med_id] = crud.dictify_list(med.doses)
-        print(f"AHHHHHHHHHHHHHHHHHHHHHHHHHHHH{doses[med.med_id]}")
+        med_hist = Dose.query.filter(Dose.med_id == med.med_id and User.user_id == user.user_id).order_by(Dose.time).all()
+        doses[med.med_id] = crud.dictify_list(med_hist)
     dict_meds = crud.dictify_list(meds)
 
     print(dict_meds)
     print(doses)
     return jsonify({"success": True, "meds": dict_meds, "doses": doses})
+
+@app.route("/delete-dose/<dose_id>")
+def delete_dose_history(dose_id):
+    """Deletes a dose from the medication history of the user."""
+    dose = Dose.query.get(dose_id)
+    db.session.delete(dose)
+    db.session.commit()
+
+    return render_template("med-history.html")
 
 
 @app.route("/new-dose", methods=["POST"])
@@ -247,6 +298,7 @@ def create_dose():
     med_id = request.form['med-id']
     doseage_amt = dosage_amt = int(request.form['dosage-amt'])
     dosage_type = request.form['dosage-type']
+    print(request.form['time'])
     time = request.form['time']
     notes = request.form['notes']
     dose = crud.create_dose(user_id, med_id, dosage_amt, dosage_type, time, notes)
