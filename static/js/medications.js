@@ -67,10 +67,11 @@ document.querySelector('#new-med-form').insertAdjacentHTML('beforeend',`
   <p>Medication\'s Dosage Frequency: </p>
   <input type='number' name='frequency' min='1' value='1'>
   <select name='per-time'>
+    <option value="once">Once</option>
     <option value="hour">Hourly</option>
     <option value="day">Daily</option>
     <option value="week">Weekly</option>
-    <option value="monthly">Monthly</option>
+    <option value="month">Monthly</option>
   </select>
 
   <p>Notes on the medication: </p>

@@ -4,6 +4,8 @@
 from flask import Flask, render_template, redirect, flash, session, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from model import db, User, Medication, Dose, connect_to_db
+import datetime
+import calendar
 import crud
 import json
 import os
@@ -15,49 +17,14 @@ app.secret_key = "dev"
 app.jinja_env.undefined = StrictUndefined
 
 
+#Test phone number
+MY_PHONE = os.environ["MY_PHONE"]
 
- 
-account_sid = os.environ['ACCOUNT_SID']
-auth_token = os.environ['AUTH_TOKEN']
+# Twilio App keys 
+account_sid = os.environ["ACCOUNT_SID"]
+auth_token = os.environ["AUTH_TOKEN"]
 client = Client(account_sid, auth_token)
- 
-
-
-
-
-
-
-
-
-"""General helper functions defined below."""
-## Change to bottom of server.
-
-def password_check(word):
-    """Checks if password has the correct characters."""
-    special_sym = ['$', '@', '#', '%', '!']
-    if ((len(word) < 8) 
-        or (not any(char.isdigit() for char in word))
-        or (not any(char.isupper() for char in word))
-        or (not any(char.islower() for char in word))
-        or (not any(char in special_sym for char in word))
-        ):
-        return False
-
-    return True
-
-@app.route("/message")
-def send_reminder():
-    """Currently a test function for Twilio"""
-    session_user = crud.get_user_by_id(session['user'])
-    phone = session_user.phone
-    message = client.messages.create(
-                              messaging_service_sid='MGd0ec2824f97ffc53c6aa437bf9e16f0c',
-                              body='Function test.',
-                              to= phone
-                          )
-    print(message.sid)
-    return jsonify({"success": True})
-
+messaging_sid = os.environ["MESSAGING_SERVICE_SID"]
 
 """ App routes defined below. """
 ##
@@ -92,36 +59,149 @@ def med_history():
     return render_template("med-history.html")
 
 
-#
-#
-#
-"""Helper functions section.
+@app.route("/reminders")
+def reminders():
+    """ Show medication reminders."""
+    return render_template("reminders.html")
 
-General helper functions.
-Homepage helper functions. """
-#
-#
-#
 
-@app.route("/get-user")
-def get_user():
-    """ Return user. """
-    # for testing, update with working id passing
-    user_id = 1
-    
+"""
+#
+#
+#
+Helper functions section.
+
+General
+Homepage
+Sign Up 
+Profile
+    Account Info
+    Medications
+    Medication History
+#
+#
+#
+"""
+
+
+
+
+"""
+#
+#
+#
+General helper functions defined below.
+#
+#
+#
+"""
+
+
+def get_user(user_id):
+    """ Return user as dictionary. """
+
     user_object = crud.get_user_by_id(user_id)
     user = User.dictify(user_object)
 
     return user
 
 
+def password_check(word):
+    """Checks if password has the correct characters."""
+    special_sym = ['$', '@', '#', '%', '!']
+    if ((len(word) < 8) 
+        or (not any(char.isdigit() for char in word))
+        or (not any(char.isupper() for char in word))
+        or (not any(char.islower() for char in word))
+        or (not any(char in special_sym for char in word))
+        ):
+        return False
+
+    return True
+
+
+def send_reminder(dose_id):
+    """Sends a message to user to remind them to take their medication."""
+    # For testing and demo purposes, all reminders have been sent to my phone number.
+   
+    dose_instance = Dose.query.get(dose_id)
+    
+    phone = MY_PHONE
+    # example code for implementing this feature to work with any user's phone:
+    #   user = User.query.get(dose_instance.user_id)
+    #   phone = user.phone
+    med = Medication.query.get(dose_instance.med_id)
+    reminder_time = str(dose_instance.time.time())
+
+    message_body = f"It's {reminder_time}. Time to take {dose_instance.dosage_amt}{dose_instance.dosage_type} of {med.name}. Notes: {dose_instance.notes}"
+    message = client.messages.create(
+                              messaging_service_sid=messaging_sid,
+                              body=message_body,
+                              to= phone
+                          )
+    print(message.sid)
+
+    freq = med.frequency
+    if med.per_time == 'once':
+        crud.del_dose(dose_id)
+    else:
+        if med.per_time == 'hour':
+            min_interval = int(60/freq)
+            new_datetime = dose_instance.time + datetime.timedelta(minutes=min_interval)
+        elif med.per_time == 'day':
+            hr_interval = int(24/freq)
+            new_datetime = dose_instance.time + datetime.timedelta(hours=hr_interval)
+        elif med.per_time == 'week':
+            day_interval = int(7/freq)
+            new_datetime = dose_instance.time + datetime.timedelta(days=day_interval)
+        elif med.per_time == 'month':
+            days_in_month = calendar.monthrange(dose_instance.time.year, dose_instance.time.month)[1]
+            day_interval = int(days_in_month/freq)
+            new_datetime = dose_instance.time + datetime.timedelta(days=day_interval)
+        dose_instance.time = new_datetime
+    
+    db.session.commit()
+
+
+
+@app.route("/test-reminders")
+def reminder_test():
+    """ Tests scheduled reminder feature. """
+    crud.check_current_reminders()
+    return jsonify({"success": True})
+        
+
+
+
+
+"""A reminder feature pseudocode:
+
+function that grabs every dose from the current day for the user. Or all future doses? good feature for profile
+function that creates new doses based on user input, and sets times based on if user adds a new time
+function that creates a reminder from a dose. Called from other function?
+
+when creating a new dose for the future,
+the dose will need to have:
+    what time they want to take it
+    how often
+        if multiple times a day, it'll need to create two new doses for the same med.
+    
+have the app route pass along:
+    how frequently """
+
+
+
+
+"""
 #
 #
 #
-"""Helper functions for homepage."""
+Helper functions for homepage.
 #
 #
 #
+"""
+
 @app.route("/login", methods=["POST"])
 def user_login():
     """ Logs user in."""
@@ -133,7 +213,7 @@ def user_login():
     if User.query.filter(User.email == email).first() and (db.session.query(User.password).filter(User.email == email).first()[0]) == password:
         user = User.query.filter(User.email == email).first()
         session['user'] = user.user_id
-        return jsonify({"success": True, "userLogged": session['user']})
+        return jsonify({"success": True, "userLogged": User.dictify(user)})
     else:
         return jsonify({"success": False, "userLogged": None})
 
@@ -142,12 +222,13 @@ def user_login():
 def logout():
     """ Logs user out. """
     user_name = None
-    user = crud.get_user_by_id(session['user'])
+    if 'user' in session and session['user'] is not None:
+        user = crud.get_user_by_id(session['user'])
 
-    if user.name is not None:
-        user_name = str(user.name)
+        if user.name is not None:
+            user_name = str(user.name)
 
-    del session['user']
+        del session['user']
 
     return jsonify({"success": True, "name": user_name})
 
@@ -155,7 +236,7 @@ def logout():
 @app.route("/user-logged")
 def user_logged():
     """ Checks the user stored in session."""
-    if ('user' in session and (User.query.get(session['user']))):
+    if ('user' in session) and (session['user'] is not None) and (User.query.get(session['user'])):
         user = crud.get_user_by_id(session['user'])
         user_dict = User.dictify(user)
         return jsonify({"user": user_dict})
@@ -163,13 +244,17 @@ def user_logged():
         return jsonify({"user": None})
 
 
+
+"""
 #
 #
 #
-"""Helper functions for sign up page."""
+Helper functions for sign up page.
 #
 #
 #
+"""
+
 
 @app.route("/add-user", methods=["POST"])
 def add_user():
@@ -188,13 +273,17 @@ def add_user():
 
     return jsonify({"success": True, "userAdded": new_user})
 
+
+"""
 #
 #
 #
-"""Helper functions for profile, account info."""
+Helper functions for profile, account info.
 #
 #
 #
+"""
+
 
 @app.route("/change-acct-info", methods=["POST"])
 def change_acct():
@@ -214,13 +303,17 @@ def change_acct():
     # Add why it didn't pass into the string, maybe. or add on other side.
     return jsonify({"success": False})
 
+
+"""
 #
 #
 #
-"""Helper functions for medication page."""
+Helper functions for medication page.
 #
 #
 #
+"""
+
 
 @app.route("/med-look-up")
 def user_meds():
@@ -257,13 +350,16 @@ def delete_medication(med_id):
     return render_template("medications.html")
 
 
+"""
 #
 #
 #
-"""Helper functions for medication history page."""
+Helper functions for medication history page.
 #
 #
 #
+"""
+
 @app.route("/get-med-history")
 def get_med_history():
     """Get medication history. Doses are returned as a dictionary of lists of dictionaries. 
@@ -272,39 +368,59 @@ def get_med_history():
     user = User.query.get(session['user'])
     meds = user.medications
     doses = {}
+    current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
     for med in meds:
-        med_hist = Dose.query.filter(Dose.med_id == med.med_id and User.user_id == user.user_id).order_by(Dose.time).all()
+        med_hist = Dose.query.filter((Dose.med_id == med.med_id),(User.user_id == user.user_id),(Dose.time < current_time)).order_by(Dose.time).all()
         doses[med.med_id] = crud.dictify_list(med_hist)
     dict_meds = crud.dictify_list(meds)
-
-    print(dict_meds)
-    print(doses)
     return jsonify({"success": True, "meds": dict_meds, "doses": doses})
 
 @app.route("/delete-dose/<dose_id>")
 def delete_dose_history(dose_id):
     """Deletes a dose from the medication history of the user."""
     dose = Dose.query.get(dose_id)
-    db.session.delete(dose)
-    db.session.commit()
-
-    return render_template("med-history.html")
-
+    current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
+    if dose.time < current_time:
+        template = "med-history.html"
+    else:
+        template = "reminders.html"
+    
+    crud.del_dose(dose_id)
+    return render_template(template)
 
 @app.route("/new-dose", methods=["POST"])
 def create_dose():
-    """Create new med associated with user."""
+    """Create new dose associated with user's medication."""
     user_id = session['user']
     med_id = request.form['med-id']
-    doseage_amt = dosage_amt = int(request.form['dosage-amt'])
+    dosage_amt = dosage_amt = int(request.form['dosage-amt'])
     dosage_type = request.form['dosage-type']
-    print(request.form['time'])
     time = request.form['time']
     notes = request.form['notes']
     dose = crud.create_dose(user_id, med_id, dosage_amt, dosage_type, time, notes)
-    dose_dict = Dose.dictify(dose)
+    current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
+    if dose.time < current_time:
+        return render_template("med-history.html")
+    else:
+        return render_template("reminders.html")
 
-    return render_template("med-history.html")
+
+@app.route("/get-reminders")
+def get_reminders():
+    """Get reminders from db. Doses are returned as a dictionary of lists of dictionaries. 
+    Each key in the list associates with a medication med_id, and contains a list of every dose tracked, 
+    stored as a dictionary."""
+    user = User.query.get(session['user'])
+    meds = user.medications
+    doses = {}
+    current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
+    for med in meds:
+        med_hist = Dose.query.filter((Dose.med_id == med.med_id),(User.user_id == user.user_id),(Dose.time > current_time)).order_by(Dose.time).all()
+        doses[med.med_id] = crud.dictify_list(med_hist)
+    dict_meds = crud.dictify_list(meds)
+    print("running")
+    return jsonify({"success": True, "meds": dict_meds, "doses": doses})
+
 
 
 if __name__ == "__main__":

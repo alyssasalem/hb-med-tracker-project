@@ -1,5 +1,7 @@
 'use strict';
 
+var today = new Date()
+
 function getUserMedHist() {
   // Get medications info from server
   fetch("/get-med-history")
@@ -12,7 +14,6 @@ function getUserMedHist() {
     });
   }
 
-// deleteMed = `<a href='/delete-dose/${dose[dose_id]}'> Delete from History</a>`
 
 const createDoseHistoryDivs = (meds, doses) => {
   
@@ -44,39 +45,38 @@ const createDoseHistoryDivs = (meds, doses) => {
   }
 
 
-  let medOptions = ``;
-  for (const med of meds) {
-    medOptions += `<option value="${med['med_id']}">${med['name']}</option>`
-  }
+let medOptions = ``;
+for (const med of meds) {
+  medOptions += `<option value="${med['med_id']}">${med['name']}</option>`
+}
+  document.querySelector('#new-dose-form').insertAdjacentHTML('beforeend',`
+  <form id='new-dose' action='/new-dose' method='POST'>
+    <p>Medication\'s Name: </p>
+    <select name='med-id'>
+      ${medOptions}
+    </select>
+    
+    <p>Medication\'s unit of measurement (choose "unit" if none apply): </p>
+    <input type='number' name='dosage-amt' min='1' value='1'>
+    <select name='dosage-type'>
+      <option value="mg">Milligram</option>
+      <option value="g">Gram</option>
+      <option value="ml">Milliliter</option>
+      <option value="l">Liter</option>
+      <option value="cc">Cubic centimeter</option>
+      <option value="unit">Unit</option>
+    </select>
 
-  
-document.querySelector('#new-dose-form').insertAdjacentHTML('beforeend',`
-<form id='new-dose' action='/new-dose' method='POST'>
-  <p>Medication\'s Name: </p>
-  <select name='med-id'>
-    ${medOptions}
-  </select>
-  
-  <p>Medication\'s unit of measurement (choose "unit" if none apply): </p>
-  <input type='number' name='dosage-amt' min='1' value='1'>
-  <select name='dosage-type'>
-    <option value="mg">Milligram</option>
-    <option value="g">Gram</option>
-    <option value="ml">Milliliter</option>
-    <option value="l">Liter</option>
-    <option value="cc">Cubic centimeter</option>
-    <option value="unit">Unit</option>
-  </select>
+    <p>Time and date medication was taken:</p>
+    <input type="datetime-local" name="time" min="1950-01-01T00:00" 
+    max="${today.getFullYear()}-${("0" + (today.getMonth() + 1)).slice(-2)}-${("0" + (today.getDate())).slice(-2)}T${("0" + (today.getHours())).slice(-2)}:${("0" + (today.getMinutes())).slice(-2)}">
 
-  <p>Time and date medication was taken:</p>
-  <input type="datetime-local" name="time">
-
-  <p>Notes on the medication: </p>
-  <input type='text' name='notes'/>
-  <p>
-  <input type="submit"> </submit>
-</form>
-`);
+    <p>Notes on the medication: </p>
+    <input type='text' name='notes'/>
+    <p>
+    <input type="submit"> </submit>
+  </form>
+  `);
 
 };
 
@@ -88,9 +88,6 @@ const navBar = () => {
     <a href='/profile'> Back to account info. </a>
   </section>`);  
 };
-
-// Form to add new histories.
-
 
 
 getUserMedHist();

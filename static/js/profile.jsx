@@ -98,6 +98,7 @@ function ChangeInfo (props) {
 
     <p><a href="/medications"> User's Medications </a></p>
     <p><a href="/med-history"> User's Medication history </a></p>
+    <p><a href="/reminders"> Set up Reminders </a></p>
    </React.Fragment>
   )
 }

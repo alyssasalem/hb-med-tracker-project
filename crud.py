@@ -1,5 +1,7 @@
 """CRUD operations."""
 
+import datetime
+import server
 from model import db, User, Medication, Dose, connect_to_db
 
 def create_user(email, password, name = None, phone = None, preferred_reminder_type = None):
@@ -87,6 +89,12 @@ def create_dose(user_id, med_id, dosage_amt, dosage_type, time, notes=None):
     return dose
 
 
+def del_dose(dose_id):
+    """Delete a dose from the db."""
+    dose = Dose.query.get(dose_id)
+    db.session.delete(dose)
+    db.session.commit()
+
 def dictify_list(class_objects_list):
     """ Takes a list of class objects and turns them into a list of dictionaries."""
     dict_list = []
@@ -97,6 +105,20 @@ def dictify_list(class_objects_list):
             dict_list.append(ob_class.dictify(obj))
 
     return dict_list
+
+
+def check_current_reminders():
+    """Looks for reminders scheduled for the current time."""
+    current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
+    current_doses = Dose.query.filter(Dose.time == current_time).all()
+    for dose in current_doses:
+        server.send_reminder(dose.dose_id)
+
+
+def schedule_reminder(dose_id):
+    #
+    pass
+
 
 if __name__ == '__main__':
     from server import app

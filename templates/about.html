@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %} About {% endblock %}
+
+{% block body %}
+    Testing About
+    <!-- link to home-->
+    <p>
+        <a href="/"> Homepage</a>
+    </p>
+
+    <!-- Link to sign-up if not signed in -->
+    <p>
+      <a href="sign-up"> Sign up</a>
+    </p>
+
+    <a href="profile"> Profile</a>
+
+{% endblock %}
+
+{% block js %}
+
+    <script src="/static/js/about.jsx" type="text/jsx"></script> 
+{% endblock %}
