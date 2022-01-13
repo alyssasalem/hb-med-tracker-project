@@ -19,42 +19,35 @@ const createDivsForMeds = (medArray) => {
   console.log(medArray);
   for (const med of medArray) {
     medElement.insertAdjacentHTML('beforeend', `
-    <div>
-      <section class='med-table'>
+    <div class="med-container">
+      <span class='med-table'>
         ${med['name']} 
-      </section>
+      </span>
       <br>
-      <section class='med-table'>
+      <span class='med-table'>
         ${med['dosage_amt']}${med['dosage_type']} ${med['frequency']}/${med['per_time']} 
-      </section>
+      </span>
       <br>
-      <section class='med-table'>
+      <span class='med-table'>
         ${med['notes']} 
-      </section>
+      </span>
       <br>
+      <form method='get' action='/delete-med/${med['med_id']}'> <button class="btn" type="submit">Delete</button></form>
     </div>
-    <a href='/delete-med/${med['med_id']}'> Delete Medication from User's Account (Will delete all dose history associated with this medication)</a><p>-----</p>`);
+    
+   `);
   }
   };
 
-// form to add new med:
-const medForm = "" +
-"<form id='new-medication'>" +
-    "<p>Medication\'s Name: </p>" +
-  "<input type='text' name='med-name'/>" +
-"</form>";
-
-
-
-document.querySelector('#med-page-nav').innerHTML = '<a href="/profile"> Back to Account Info </a>';
 
 document.querySelector('#new-med-form').insertAdjacentHTML('beforeend',`
+<div class='new-med-container'>
 <form id='new-medication' action='/new-med' method='POST'>
   <p>Medication\'s Name: </p>
-  <input type='text' name='name'/>
+  <input class='form-input' type='text' name='name'/><br></br>
   <p>Medication\'s unit of measurement (choose "unit" if none apply): </p>
-  <input type='number' name='dosage-amt' min='1' value='1'>
-  <select name='dosage-type'>
+  <input class='form-input inline' type='number' name='dosage-amt' min='1' value='1'>
+  <select class='form-input inline' name='dosage-type'>
     <option value="mg">Milligram</option>
     <option value="g">Gram</option>
     <option value="ml">Milliliter</option>
@@ -62,21 +55,21 @@ document.querySelector('#new-med-form').insertAdjacentHTML('beforeend',`
     <option value="cc">Cubic centimeter</option>
     <option value="unit">Unit</option>
   </select>
-
-
+  <p></p>
   <p>Medication\'s Dosage Frequency: </p>
-  <input type='number' name='frequency' min='1' value='1'>
-  <select name='per-time'>
+  <input class='form-input inline' type='number' name='frequency' min='1' value='1'>
+  <select class='form-input inline' name='per-time'>
     <option value="once">Once</option>
     <option value="hour">Hourly</option>
     <option value="day">Daily</option>
     <option value="week">Weekly</option>
     <option value="month">Monthly</option>
   </select>
-
+  <p></p>
   <p>Notes on the medication: </p>
-  <input type='text' name='notes'/>
+  <input class='form-input' type='text' name='notes'/>
   <p>
-  <input type="submit"> </submit>
+  <input class='btn' type="submit"> </submit></p>
 </form>
+</div>
 `);

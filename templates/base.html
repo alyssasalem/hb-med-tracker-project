@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+  <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <!-- This block is for page title. -->
   <title>{% block title %}{% endblock %}</title>
 
@@ -22,11 +26,55 @@
     {{ msg }}
   </p>
   {% endfor %}
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-md navbar-custom-theme">
+    <a class="navbar-brand" href="/">Home</a>
+      <button class="navbar-toggler" 
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#navExpandContent" 
+              aria-controls="navExpandContent" 
+              aria-expanded="false" 
+              aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+      </svg></span>
+    </button>
+    <div class="navbar-collapse collapse" id="navExpandContent">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/sign-up">Sign Up</a>
+        </li>
+        <!--Drop down.-->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Account
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="/profile">Account info</a></li>
+            <li><a class="dropdown-item" href="/medications">User Medications</a></li>
+            <li><a class="dropdown-item" href="/reminders">Future Doses</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+      </div>
+    </div>
+  </nav>
+
+
+
+
   <!-- This block is for page specific body. -->
   {% block body %}
   {% endblock %}
 
-  
+  <!--Bootstrap UI elements-->
+  <!-- JavaScript Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
   <!-- This block allows page specific JS. -->
   {% block js %}

@@ -13,8 +13,9 @@ function InfoField(props) {
     //so calling this could be: <InfoField fieldname = {name}
   <div className="acct-info">
     <label htmlFor="nameInput">
-    <p>User's Name: {props.user['name']} </p>
+    <section>User's Name: {props.user['name']} </section>
     <input
+    className="form-input"
     value={name}
     onChange={event => setName(event.target.value)}
     id="nameInput"
@@ -29,9 +30,9 @@ function InfoField(props) {
 function ChangeInfo (props) {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const phone = props.user['phone']
+  const [phone, setPhone] = React.useState('');
   const password = props.user['password']
-  const preferred_reminder_type = props.user['preferred_reminder_type']
+  const [preferredReminderType, setPreferredReminderType] = React.useState('');
   const [currentPass, setCurrentPass] = React.useState('')
  
   // const [phone, setPhone] = React.useState(props.user['phone']);
@@ -40,26 +41,30 @@ function ChangeInfo (props) {
 
   //sends info to server
   function sendInfo() {
-    console.log(email, password, name, phone, preferred_reminder_type, currentPass);
+    return function () {
+    console.log(email, password, name, phone, preferredReminderType, currentPass);
     fetch('/change-acct-info', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
     },
-    body: JSON.stringify({email, password, name, phone, preferred_reminder_type, currentPass}),
+    body: JSON.stringify({email, password, name, phone, preferredReminderType, currentPass}),
     })
     .then(response => response.json()
     .then(jsonResponse => {
       console.log(jsonResponse)
     })); 
+  }
 }
   return (
     // look into using function or forloop+array to condense html 
    <React.Fragment>
+     <section id="acct-info-container">
     <div className="acct-info">
       <label htmlFor="nameInput">
         <p>User's Name: {props.user['name']} </p>
         <input
+        className="form-input"
         value={name}
         onChange={event => setName(event.target.value)}
         id="nameInput"
@@ -72,6 +77,7 @@ function ChangeInfo (props) {
       <label htmlFor="emailInput">
         <p>User's Email: {props.user['email']} </p>
         <input
+        className="form-input"
         value={email}
         onChange={event => setEmail(event.target.value)}
         id="emailInput"
@@ -81,9 +87,37 @@ function ChangeInfo (props) {
     </div>
     
     <div className="acct-info">
-      <label htmlFor="currentPassInput">
-        <p>User's Current Password: {props.user['currentPass']} </p>
+      <label htmlFor="phoneInput">
+        <p>User's Phone: {props.user['phone']} </p>
         <input
+        className="form-input"
+        value={phone}
+        onChange={event => setPhone(event.target.value)}
+        id="phoneInput"
+        placeholder={props.user['phone']}
+        />
+        </label>
+    </div>
+
+    <div className="acct-info">
+      <label htmlFor="preferredInput">
+        <p>User's Preferred Reminder Type: {props.user['preferred_reminder_type']} </p>
+        <select
+        className="form-input"
+        value={preferredReminderType}
+        onChange={event => setPreferredReminderType(event.target.value)}
+        id="preferredInput">
+          <option value="text">Text</option>
+          <option value="email">Email</option>
+        </select>
+        </label>
+    </div>
+
+    <div className="acct-info">
+      <label htmlFor="currentPassInput">
+        <p>Input User's Current Password: {props.user['currentPass']} </p>
+        <input
+        className="form-input"
         type="password"
         value={currentPass}
         onChange={event => setCurrentPass(event.target.value)}
@@ -92,13 +126,36 @@ function ChangeInfo (props) {
         </label>
     </div>
 
-    <button type="button" onClick={sendInfo}>
-      Change Info
-    </button>
+      <button className="btn" type="button" onClick={sendInfo}>
+        Change Info
+      </button>
+    </section>
 
-    <p><a href="/medications"> User's Medications </a></p>
-    <p><a href="/med-history"> User's Medication history </a></p>
-    <p><a href="/reminders"> Set up Reminders </a></p>
+    <button
+    className="btn"
+    type="button"
+    onClick={(e) => {
+    e.preventDefault();
+    window.location.href='/medications';
+    }}>Medications</button>
+    <br></br>
+
+    <button
+    className="btn"
+    type="button"
+    onClick={(e) => {
+    e.preventDefault();
+    window.location.href='/med-history';
+    }}>User's Medication history</button>
+    <br></br>
+
+    <button
+    className="btn"
+    type="button"
+    onClick={(e) => {
+    e.preventDefault();
+    window.location.href='/reminders';
+    }}>Future Doses and Beta Reminder Feature</button>
    </React.Fragment>
   )
 }
@@ -108,17 +165,18 @@ function AccountInfo(props) {
   const user = props.user;
   return (
     <React.Fragment>
-      <div className="acct-info">
-        Username: {user['name']}
+      <div className="acct-info acct-display">
+        <span className="acct-info info-name">Username:</span> <span className="info-data">{user['name']}</span>
       </div>
       <div>
-        Email: {user['email']}
+        <span className="acct-info info-name">Email:</span> <span className="info-data">{user['email']}</span>
       </div>
       <div>
-        Phone: {user['phone']}
+        <span className="acct-info info-name">Phone:</span> <span className="info-data">{user['phone']}</span>
       </div>
       <div>
-        Preferred method of contact: {user['preferred_reminder_type']}
+        <span className="acct-info info-name">Preferred method of contact:</span> 
+        <span className="info-data">{user['preferred_reminder_type']}</span>
       </div>
     </React.Fragment>
   )
@@ -129,8 +187,6 @@ function AccountInfo(props) {
 // function to show user
 function ShowUserInSession() {
   const [user, setUser] = React.useState('');
-
-
 // Fetch logged in user.
   React.useEffect(() => {
     fetch('user-logged')
@@ -144,11 +200,29 @@ function ShowUserInSession() {
   //returns user in session, or refers user to mainpage.
   if (user === null) {
     return (
-      <section>You're not logged in. 
-        <a href="/"> Go back to login.</a></section>
+    <section>You're not logged in. 
+        <br></br>
+        <button
+        className="btn"
+        type="button"
+        onClick={(e) => {
+        e.preventDefault();
+        window.location.href='/sign-up';
+        }}>Sign Up</button>
+        <br></br>
+
+        <button
+        className="btn"
+        type="button"
+        onClick={(e) => {
+        e.preventDefault();
+        window.location.href='/';
+        }}>Go back to login.</button>
+        <br></br>
+    </section> 
     ); }
   else {
-    const noName = user['name'] === null;
+    const noName = (user.name === null);
     return (
       <React.Fragment>
         <h1 id="session-user">
@@ -160,8 +234,6 @@ function ShowUserInSession() {
         <AccountInfo user={user}/>
         <ChangeInfo user={user} />
       </React.Fragment>) }
-
-
   //belongs to ShowUserInSession container 
   }
 

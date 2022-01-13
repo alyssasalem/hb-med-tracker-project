@@ -64,6 +64,11 @@ def reminders():
     """ Show medication reminders."""
     return render_template("reminders.html")
 
+@app.route("/about")
+def about():
+    """ Show about page."""
+    return render_template("about.html")
+
 
 """
 #
@@ -238,9 +243,12 @@ def user_logged():
     """ Checks the user stored in session."""
     if ('user' in session) and (session['user'] is not None) and (User.query.get(session['user'])):
         user = crud.get_user_by_id(session['user'])
+        
         user_dict = User.dictify(user)
+        print(user_dict)
         return jsonify({"user": user_dict})
     else:
+        print("no user")
         return jsonify({"user": None})
 
 
@@ -259,8 +267,12 @@ Helper functions for sign up page.
 @app.route("/add-user", methods=["POST"])
 def add_user():
     """ Add new user."""
+
     email = request.get_json().get("email")
     password = request.get_json().get("password")
+    name = request.get_json().get("name")
+    phone = request.get_json().get("phone")
+    preferred_reminder_type = request.get_json().get("preferredReminderType")
 
     # fails to add user: 
     # If the email is already in the database, or the password doesn't have the right chars
@@ -269,9 +281,12 @@ def add_user():
 
     #add logic to tell user why their sign up didn't work
 
-    new_user = User.dictify(crud.create_user(email, password))
+    new_user = crud.create_user(email, password, name, phone, preferred_reminder_type)
+    new_user_dict = User.dictify(new_user)
+    session['user'] = new_user.user_id
+    print(session['user'])
 
-    return jsonify({"success": True, "userAdded": new_user})
+    return jsonify({"success": True, "userAdded": new_user_dict})
 
 
 """
@@ -293,7 +308,7 @@ def change_acct():
     password = request.get_json().get("password")
     name = request.get_json().get("name")
     phone = request.get_json().get("phone")
-    preferred_reminder_type = request.get_json().get("preferred_reminder_type")
+    preferred_reminder_type = request.get_json().get("preferredReminderType")
     current_pass = request.get_json().get("currentPass")
     
     if crud.correct_pass(current_pass, user_id):
@@ -335,7 +350,7 @@ def create_med():
     med_dict = Medication.dictify(med)
 
 
-    return render_template("medications.html")
+    return redirect("/medications", code=302)
 
 @app.route("/delete-med/<med_id>")
 def delete_medication(med_id):
@@ -347,7 +362,7 @@ def delete_medication(med_id):
     db.session.delete(med)
     db.session.commit()
 
-    return render_template("medications.html")
+    return redirect("/medications", code=302)
 
 
 """
@@ -381,12 +396,12 @@ def delete_dose_history(dose_id):
     dose = Dose.query.get(dose_id)
     current_time = datetime.datetime.now().replace(second=0, microsecond=0) + datetime.timedelta(hours=-8)
     if dose.time < current_time:
-        template = "med-history.html"
+        template = "med-history"
     else:
-        template = "reminders.html"
+        template = "reminders"
     
     crud.del_dose(dose_id)
-    return render_template(template)
+    return redirect(f"/{template}", code=302)
 
 @app.route("/new-dose", methods=["POST"])
 def create_dose():

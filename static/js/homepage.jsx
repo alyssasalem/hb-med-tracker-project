@@ -3,20 +3,7 @@
 // Use state changes true/false to render the buttons properly.
 // rework so it only has one render, see notes for pseudocode
 
-
-function Message(props) {
-  if (props.change === true){
-    if (props.user === null) {
-      return (<React.Fragment>You've logged out! Bye!</React.Fragment>);
-    } else {
-      return (<React.Fragment>Welcome back!</React.Fragment>)
-    } 
-  } else {
-    return null
-  }
-}
-
-function loginUser (email, password, setChange, setUser){
+function loginUser (email, password, setChange, setUser, setLoggedIn){
   return function () {
   fetch('/login', {
     method: 'POST',
@@ -27,20 +14,29 @@ function loginUser (email, password, setChange, setUser){
     })
     .then(response => response.json()
     .then(result => {
-      console.log("now we're logged in!");
-      setUser(result.user)
-      setChange(result.success)
+      setUser(result.user);
+      setLoggedIn(result.success);
+      if (result.user === []) {
+        alert("Uh oh! Recheck your information, please.");
+      }
+      else {
+        setChange(result.success);
+      }
     })
     ); }
 }
 
-function logOut (setUser, setChange){
+function logOut (setUser, setChange, setLoggedIn){
   return function () {
   fetch('/log-out')
   .then(response => response.json()
   .then(result => {
-    setUser(null);
+    console.log("logging out");
+    setUser([]);
     setChange(result.success);
+    if (result.success === true) {
+      setLoggedIn(false);
+    }
     })
   ); }
 }
@@ -52,40 +48,44 @@ function LogInBox() {
   const [password, setPassword] = React.useState('');
   const [user, setUser] = React.useState([]);
   const [change, setChange] = React.useState(false);
+  const [loggedIn, setLoggedIn] = React.useState(false);
 
   React.useEffect(() => {
     fetch('/user-logged')
       .then(response => response.json())
       .then(result => {
-        console.log("is a user logged?");
         setUser(result.user);
+        if (result.user !== [] && result.user !== null && result.user.length !== 0) {
+          setLoggedIn(true);
+        }
       });
   }, []);
 
-  if (user === null){
+  if (loggedIn === false){
     return (
         <React.Fragment>
         <h2>Log In</h2>
-        <p>
         <label htmlFor="emailLogin">
-            Email
+            <p className="login-prompt no-pad">Email</p>
             <input
+            className="form-input no-pad"
             value={email}
             onChange={event => setEmail(event.target.value)}
             id="emailLogin"/>
         </label>
-        </p>
-        <p>
+        <br></br>
         <label htmlFor="passwordLogin">
-            Password
-            <input value={password} 
+        <p className="login-prompt no-pad">Password</p>
+            <input 
+            className="form-input no-pad"
+            value={password} 
             onChange={event => setPassword(event.target.value)} 
             id="passwordLogin" />
-        </label></p>
-        <button onClick={loginUser(email, password, setChange, setUser)}>
+        </label>
+        <br></br>
+        <button className="btn" onClick={loginUser(email, password, setChange, setUser, setLoggedIn)}>
             Login
         </button>
-        < Message user={user} change={change} />
         </React.Fragment>
     );
   }
@@ -93,11 +93,10 @@ function LogInBox() {
     return (
       <React.Fragment>
       <div>
-        <button onClick={logOut(setUser, setChange)}>
+        <button className="btn" onClick={logOut(setUser, setChange, setLoggedIn)}>
           Logout
         </button>
       </div>
-      < Message user={user} change={change} />
       </React.Fragment>
       );
   }

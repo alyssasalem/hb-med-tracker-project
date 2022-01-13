@@ -19,26 +19,26 @@ db.create_all()
 
 
 user1 = User(
-    email = "test1@email.com", 
-    password = "Agoodpass1!", 
-    name = "Person Testname",  
-    phone = "1 (555)test-phone",  
+    email = "test1@email.com",
+    password = "Agoodpass1!",
+    name = "Person Testname",
+    phone = "1 (555)test-phone",
     preferred_reminder_type = "text")
 db.session.add(user1)
 db.session.commit()
 
 user2 = User(
-    email = "test2@email.net", 
-    password = "AGoodPass2@", 
-    name = "Nameyname",  
-    phone = "222-test-phone",  
+    email = "test2@email.net",
+    password = "AGoodPass2@",
+    name = "Nameyname",
+    phone = "222-test-phone",
     preferred_reminder_type = "text email")
 db.session.add(user2)
 db.session.commit()
 
 user3 = User(
-    email = "test3@email.net", 
-    password = "agoodPass3#", 
+    email = "test3@email.net",
+    password = "agoodPass3#",
     name = "Testname",  
     phone = "(333) 333-3333",  
     preferred_reminder_type = "email")
