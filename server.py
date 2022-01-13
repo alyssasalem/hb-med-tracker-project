@@ -312,8 +312,9 @@ def change_acct():
     current_pass = request.get_json().get("currentPass")
     
     if crud.correct_pass(current_pass, user_id):
-        crud.change_acct_info(user_id, email, password, name, phone, preferred_reminder_type)
-        return jsonify({"success": True})
+        user = crud.change_acct_info(user_id, email, password, name, phone, preferred_reminder_type)
+        dict_user = User.dictify(user)
+        return jsonify({"success": True, "user": dict_user})
 
     # Add why it didn't pass into the string, maybe. or add on other side.
     return jsonify({"success": False})

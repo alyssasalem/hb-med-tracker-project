@@ -81,7 +81,7 @@ function AddNewAccount() {
       console.log(jsonResponse)
       if (jsonResponse.success === true){
         setChange(true);
-        setUser(jsonResponse.userAdded);
+        setUser(jsonResponse.user);
         setLoggedIn(true);
       }
     })); 
